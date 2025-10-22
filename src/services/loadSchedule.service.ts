@@ -17,7 +17,17 @@ const TaskSchema = z.object({
 const ScheduleSchema = z.object({
 	repo: z.string(),
 	timezone: z.string(),
-	tasks: z.array(TaskSchema),
+	tasks: z.array(TaskSchema).refine(
+		(tasks) => {
+			const categories = tasks.map((task) => task.category);
+			const uniqueCategories = new Set(categories);
+			return uniqueCategories.size === categories.length;
+		},
+		{
+			message: "Each task category must be unique",
+			path: ["tasks"],
+		}
+	),
 });
 
 export type ScheduleConfig = z.infer<typeof ScheduleSchema>;
