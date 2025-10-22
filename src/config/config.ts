@@ -1,13 +1,28 @@
 import * as z from "zod";
 import "dotenv/config";
 
-const EnvSchema = z.object({
-	// Pino Logger
-	LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+export enum NodeEnv {
+	Development = "development",
+	Production = "production",
+	Test = "test",
+}
 
-	// GitHub PAT
-	GITHUB_PAT: z.string().min(1, "GITHUB_PAT is required and cannot be empty"),
-});
+const EnvSchema = z
+	.object({
+		// Pino Logger
+		LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+
+		// GitHub PAT
+		GITHUB_PAT: z.string().min(1, "GITHUB_PAT is required and cannot be empty"),
+
+		// Runtime environment
+		NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development),
+	})
+	.transform((env) => ({
+		...env,
+
+		isDev: env.NODE_ENV === NodeEnv.Development,
+	}));
 
 // Validate process.env
 const parsedEnv = EnvSchema.safeParse(process.env);
