@@ -58,6 +58,7 @@ Replace `username/my-pm-manager` with your actual GitHub username and repository
 Create `schedule.yaml` in the project root:
 
 ```yaml
+repo: username/my-pm-manager
 timezone: Asia/Kolkata
 
 tasks:
@@ -235,6 +236,16 @@ You can create issues manually in your repository. They will automatically:
 - Appear on the Kanban board
 - Be tracked like any other issue
 - Not be automatically closed (only pm-managed issues auto-close)
+
+### Editing Issues
+
+You can edit issue bodies directly on GitHub:
+
+- Add new checklist items as needed
+- Update descriptions
+- Add notes or comments
+
+The application will respect your changes and migrate any unchecked items if the issue is closed before the deadline.
 
 ### Modifying Schedule
 
