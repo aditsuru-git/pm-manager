@@ -331,27 +331,25 @@ class GitHubService {
 			return;
 		}
 
-		// Update Status field with correct columns
 		const updateFieldMutation = `
-		mutation($projectId: ID!, $fieldId: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
-			updateProjectV2Field(input: {projectId: $projectId, fieldId: $fieldId, singleSelectOptions: $options}) {
-				projectV2Field {
-					... on ProjectV2SingleSelectField {
-						id
-						options {
-							id
-							name
-						}
-					}
-				}
-			}
-		}
-	`;
+  mutation($fieldId: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
+    updateProjectV2Field(input: {fieldId: $fieldId, singleSelectOptions: $options}) {
+      projectV2Field {
+        ... on ProjectV2SingleSelectField {
+          id
+          options {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+`;
 
 		const updateResult: any = await this.apiCall(() =>
 			this.octokit.graphql(updateFieldMutation, {
-				projectId: projectId,
-				fieldId: statusField.id,
+				fieldId: statusField.id, // Removed projectId
 				options: [
 					{ name: "Todo", color: "GRAY" },
 					{ name: "In Progress", color: "YELLOW" },
