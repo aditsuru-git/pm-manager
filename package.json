@@ -3,9 +3,20 @@
 	"version": "1.0.0",
 	"description": "Productivity Manager is a time management tool that takes your schedule and turns it into GitHub Issues",
 	"main": "index.ts",
-	"scripts": {},
-	"keywords": [],
-	"author": "",
+	"scripts": {
+		"dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
+		"build": "tsc && tsc-alias",
+		"start": "node dist/index.js",
+		"typecheck": "tsc --noEmit",
+		"clean": "rm -rf dist"
+	},
+	"keywords": [
+		"productivity",
+		"task-management",
+		"github",
+		"automation"
+	],
+	"author": "aditsuru-git",
 	"license": "ISC",
 	"devDependencies": {
 		"@types/js-yaml": "^4.0.9",
@@ -17,7 +28,8 @@
 		"ts-node-dev": "^2.0.0",
 		"tsc-alias": "^1.8.16",
 		"tsconfig-paths": "^4.2.0",
-		"typescript": "^5.9.3"
+		"typescript": "^5.9.3",
+		"pino-pretty": "^13.1.2"
 	},
 	"dependencies": {
 		"js-yaml": "^4.1.0",

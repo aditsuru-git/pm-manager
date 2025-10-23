@@ -1,0 +1,67 @@
+# Task Schedule Configuration
+# This file defines your recurring tasks that will be created as GitHub issues
+
+timezone: Asia/Kolkata
+
+tasks:
+  # Daily morning routine
+  - name: Morning Study Session
+    category: study
+    recurrence:
+      days: [daily] # Creates every day
+    deadline: "09:30" # HH:MM format (24-hour)
+    description: |
+      Complete daily study tasks
+
+      ## Default Tasks
+      - [ ] Review notes from yesterday
+      - [ ] Read one chapter
+      - [ ] Practice problems
+
+  # Weekday work tasks
+  - name: Work on Project X
+    category: project-x
+    recurrence:
+      days: [monday, tuesday, wednesday, thursday, friday]
+    deadline: "18:00"
+    description: |
+      Daily progress on Project X
+
+      ## Today's Goals
+      - [ ] Code review
+      - [ ] Fix bugs
+      - [ ] Update documentation
+
+  # Weekend tasks
+  - name: Personal Development
+    category: personal
+    recurrence:
+      days: [saturday, sunday]
+    deadline: "20:00"
+    description: |
+      Weekend personal growth activities
+
+      ## Activities
+      - [ ] Work on side project
+      - [ ] Learn something new
+      - [ ] Plan next week
+
+  # Specific day tasks
+  - name: Weekly Review
+    category: review
+    recurrence:
+      days: [sunday]
+    deadline: "21:00"
+    description: |
+      Weekly review and planning
+
+      ## Review Items
+      - [ ] What went well this week?
+      - [ ] What can be improved?
+      - [ ] Goals for next week
+
+# Notes:
+# - Each task must have a unique category (used as label)
+# - Days are lowercase: monday, tuesday, wednesday, thursday, friday, saturday, sunday, daily
+# - Deadline format: HH:MM in 24-hour format
+# - Description supports markdown including checkboxes

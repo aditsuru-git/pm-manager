@@ -28,7 +28,7 @@ class GitHubService {
 				logger.error("Repository not found (404)");
 				process.exit(1);
 			} else {
-				logger.warn("Network error, retrying once...");
+				logger.warn(err, "Network error, retrying once...");
 				try {
 					return await fn();
 				} catch {
@@ -203,8 +203,17 @@ class GitHubService {
 
 			const projects = data.repository.projectsV2.nodes;
 			return projects.some((project: any) => project.title === name);
-		} catch (error) {
-			logger.error({ error }, "Error checking kanban board existence");
+		} catch (error: any) {
+			logger.error(
+				{
+					error: error.message,
+					status: error.status,
+					errors: error.errors,
+					owner: this.owner,
+					repo: this.repo,
+				},
+				"Error checking kanban board existence"
+			);
 			return false;
 		}
 	}
@@ -215,6 +224,44 @@ class GitHubService {
 			return;
 		}
 
+		// Get owner (user) ID
+		const ownerQuery = `
+      query($login: String!) {
+        user(login: $login) {
+          id
+        }
+      }
+    `;
+
+		const ownerData: any = await this.apiCall(() =>
+			this.octokit.graphql(ownerQuery, {
+				login: this.owner,
+			})
+		);
+
+		const ownerId = ownerData.user.id;
+
+		// Create project at user level
+		const createProjectMutation = `
+      mutation($ownerId: ID!, $title: String!) {
+        createProjectV2(input: {ownerId: $ownerId, title: $title}) {
+          projectV2 {
+            id
+          }
+        }
+      }
+    `;
+
+		const projectData: any = await this.apiCall(() =>
+			this.octokit.graphql(createProjectMutation, {
+				ownerId: ownerId,
+				title: name,
+			})
+		);
+
+		const projectId = projectData.createProjectV2.projectV2.id;
+
+		// Link project to repository
 		const repoQuery = `
       query($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
@@ -232,24 +279,22 @@ class GitHubService {
 
 		const repositoryId = repoData.repository.id;
 
-		const createProjectMutation = `
-      mutation($repositoryId: ID!, $title: String!) {
-        createProjectV2(input: {repositoryId: $repositoryId, title: $title}) {
-          projectV2 {
+		const linkProjectMutation = `
+      mutation($projectId: ID!, $repositoryId: ID!) {
+        linkProjectV2ToRepository(input: {projectId: $projectId, repositoryId: $repositoryId}) {
+          repository {
             id
           }
         }
       }
     `;
 
-		const projectData: any = await this.apiCall(() =>
-			this.octokit.graphql(createProjectMutation, {
+		await this.apiCall(() =>
+			this.octokit.graphql(linkProjectMutation, {
+				projectId: projectId,
 				repositoryId: repositoryId,
-				title: name,
 			})
 		);
-
-		const projectId = projectData.createProjectV2.projectV2.id;
 
 		const getFieldsQuery = `
       query($projectId: ID!) {

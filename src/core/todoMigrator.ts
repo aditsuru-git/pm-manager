@@ -43,9 +43,6 @@ export class TodoMigrator {
 		const issues = await githubService.getIssuesByLabels([category, "incomplete"], "closed");
 
 		for (const issue of issues) {
-			// Remove incomplete label by getting all labels except "incomplete"
-			issue.labels.filter((label) => label !== "incomplete");
-
 			// GitHub API doesn't have a "remove label" that preserves others easily,
 			// so we need to remove the label via DELETE endpoint
 			try {

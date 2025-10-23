@@ -16,7 +16,6 @@ const TaskSchema = z.object({
 });
 
 const ScheduleSchema = z.object({
-	repo: z.string(),
 	timezone: z.string(),
 	tasks: z.array(TaskSchema).refine(
 		(tasks) => {

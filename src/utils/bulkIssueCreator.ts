@@ -1,5 +1,5 @@
-import { issueCreator } from "@/core";
-import { stateService } from "@/services";
+import { issueCreator } from "@/core/issueCreator";
+import { stateService, githubService } from "@/services";
 import { logger } from "@/utils";
 import type { ScheduleConfig } from "@/services";
 
@@ -7,7 +7,7 @@ export class BulkIssueCreator {
 	private getTodayDay(): string {
 		const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 		const today = new Date();
-		return days[today.getDay()];
+		return days[today.getDay()]!;
 	}
 
 	private shouldCreateToday(recurrenceDays: string[]): boolean {
@@ -22,7 +22,7 @@ export class BulkIssueCreator {
 	}
 
 	async createTodaysIssues(schedule: ScheduleConfig, assignee?: string): Promise<void> {
-		const today = new Date().toISOString().split("T")[0];
+		const today = new Date().toISOString().split("T")[0]!;
 
 		logger.info({ date: today }, "Starting bulk issue creation");
 
@@ -69,8 +69,6 @@ export class BulkIssueCreator {
 	}
 
 	async ensureLabelsExist(schedule: ScheduleConfig): Promise<void> {
-		const { githubService } = await import("@/services");
-
 		logger.info("Ensuring all category labels exist");
 
 		// Always create pm-managed label
@@ -90,8 +88,8 @@ export class BulkIssueCreator {
 		];
 
 		for (let i = 0; i < schedule.tasks.length; i++) {
-			const task = schedule.tasks[i];
-			const color = colors[i % colors.length];
+			const task = schedule.tasks[i]!;
+			const color = colors[i % colors.length]!;
 
 			try {
 				await githubService.createLabel(task.category, color);

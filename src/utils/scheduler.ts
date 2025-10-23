@@ -1,4 +1,4 @@
-import cron from "node-cron";
+import * as cron from "node-cron";
 import schedule from "node-schedule";
 import { deadlineHandler } from "@/core/deadlineHandler";
 import { bulkIssueCreator } from "@/utils/bulkIssueCreator";
@@ -10,11 +10,13 @@ export class Scheduler {
 	private midnightJob: cron.ScheduledTask | null = null;
 
 	private parseDeadlineTime(deadline: string): { hour: number; minute: number } {
-		const [hour, minute] = deadline.split(":").map(Number);
+		const parts = deadline.split(":").map(Number);
+		const hour = parts[0]!;
+		const minute = parts[1]!;
 		return { hour, minute };
 	}
 
-	scheduleDeadlineChecks(scheduleConfig: ScheduleConfig, assignee?: string): void {
+	scheduleDeadlineChecks(scheduleConfig: ScheduleConfig): void {
 		logger.info("Scheduling deadline checks");
 
 		for (const task of scheduleConfig.tasks) {
@@ -62,7 +64,7 @@ export class Scheduler {
 	start(scheduleConfig: ScheduleConfig, assignee?: string): void {
 		logger.info("Starting scheduler");
 
-		this.scheduleDeadlineChecks(scheduleConfig, assignee);
+		this.scheduleDeadlineChecks(scheduleConfig);
 		this.scheduleMidnightIssueCreation(scheduleConfig, assignee);
 
 		logger.info(

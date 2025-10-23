@@ -5,7 +5,9 @@ import { logger } from "@/utils";
 
 export class DeadlineHandler {
 	private parseDeadlineTime(deadline: string): { hours: number; minutes: number } {
-		const [hours, minutes] = deadline.split(":").map(Number);
+		const parts = deadline.split(":").map(Number);
+		const hours = parts[0]!;
+		const minutes = parts[1]!;
 		return { hours, minutes };
 	}
 
@@ -20,7 +22,7 @@ export class DeadlineHandler {
 	}
 
 	async processDeadlineForCategory(category: string, deadline: string): Promise<void> {
-		const today = new Date().toISOString().split("T")[0];
+		const today = new Date().toISOString().split("T")[0]!;
 
 		// Check if already processed today
 		if (!stateService.needsDeadlineProcessing(category, today)) {

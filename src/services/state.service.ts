@@ -63,7 +63,8 @@ class StateService {
 			return;
 		}
 
-		state[index] = { ...state[index], ...updates };
+		const existingItem = state[index]!;
+		state[index] = { ...existingItem, ...updates };
 		this.save(state);
 	}
 
