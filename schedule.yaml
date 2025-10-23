@@ -13,6 +13,9 @@ tasks:
     description: |
       Complete daily study tasks
 
+      Your description here:
+      - XYZ
+
       ## Default Tasks
       - [ ] Review notes from yesterday
       - [ ] Read one chapter
