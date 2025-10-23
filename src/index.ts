@@ -1,17 +1,64 @@
-import { logger, createLocalStateObject } from "@/utils";
-import { config } from "@/config";
-import { loadSchedule, localStateServiceClient, githubServiceClient } from "@/services";
+import { logger, startup, scheduler } from "@/utils";
+import { githubService } from "@/services";
 
 async function main() {
-	logger.info("Starting services...");
-	const localStateObject = createLocalStateObject();
+	logger.info("=".repeat(50));
+	logger.info("Task Manager - Starting");
+	logger.info("=".repeat(50));
 
-	localStateServiceClient.save(localStateObject);
-	const todayIssuesLeftForCreation = localStateServiceClient.createIssuesForToday();
+	try {
+		// Run startup sequence
+		const schedule = await startup.run();
 
-	if (todayIssuesLeftForCreation) {
+		// Get authenticated user
+		const username = await githubService.getAuthenticatedUser();
+
+		// Start scheduler
+		scheduler.start(schedule, username);
+
+		logger.info("=".repeat(50));
+		logger.info("Task Manager - Running");
+		logger.info("=".repeat(50));
+		logger.info("Press Ctrl+C to stop");
+	} catch (error) {
+		logger.error({ error }, "Failed to start application");
+		process.exit(1);
 	}
-
-	// launch cron job which checks issue creation every 12 hours, new issues are only create every day
-	// launch deadline checker cron job OR event at exact deadlines
 }
+
+// Graceful shutdown
+process.on("SIGINT", () => {
+	logger.info("Received SIGINT signal");
+	logger.info("Shutting down gracefully...");
+
+	scheduler.stop();
+
+	logger.info("Shutdown complete");
+	process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+	logger.info("Received SIGTERM signal");
+	logger.info("Shutting down gracefully...");
+
+	scheduler.stop();
+
+	logger.info("Shutdown complete");
+	process.exit(0);
+});
+
+// Handle uncaught errors
+process.on("uncaughtException", (error) => {
+	logger.error({ error }, "Uncaught exception");
+	scheduler.stop();
+	process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+	logger.error({ reason, promise }, "Unhandled rejection");
+	scheduler.stop();
+	process.exit(1);
+});
+
+// Start the application
+main();
