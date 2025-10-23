@@ -58,7 +58,6 @@ Replace `username/my-pm-manager` with your actual GitHub username and repository
 Create `schedule.yaml` in the project root:
 
 ```yaml
-repo: username/my-pm-manager
 timezone: Asia/Kolkata
 
 tasks:
