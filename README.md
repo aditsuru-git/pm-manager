@@ -18,7 +18,15 @@ A task management tool that converts your schedule into GitHub Issues and tracks
 
 ## Setup
 
-### 1. Create GitHub Personal Access Token
+### 1. Create GitHub Repository
+
+Create a new repository on GitHub that will store your tasks as issues.
+
+Example: `my-pm-manager`
+
+This repository will contain all your automated issues and the Kanban board.
+
+### 2. Create GitHub Personal Access Token
 
 Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
 
@@ -27,7 +35,7 @@ Create a classic token with these scopes:
 - `repo` (Full control of private repositories)
 - `project` (Full control of projects)
 
-### 2. Clone and Configure
+### 3. Clone and Configure
 
 ```bash
 git clone <repository-url>
@@ -38,17 +46,18 @@ Create `.env` file:
 
 ```
 GITHUB_PAT=your_personal_access_token
-GITHUB_REPO=username/repository-name
+GITHUB_REPO=username/my-pm-manager
 LOG_LEVEL=info
 NODE_ENV=production
 ```
 
-### 3. Create Schedule File
+Replace `username/my-pm-manager` with your actual GitHub username and repository name.
+
+### 4. Create Schedule File
 
 Create `schedule.yaml` in the project root:
 
 ```yaml
-repo: username/repository-name
 timezone: Asia/Kolkata
 
 tasks:
