@@ -9,9 +9,9 @@ class GitHubService {
 
 	constructor() {
 		this.octokit = new Octokit({ auth: config.GITHUB_PAT });
-		const [owner, repo] = config.GITHUB_REPO.split("/");
-		this.owner = owner as string;
-		this.repo = repo as string;
+		const parts = config.GITHUB_REPO.split("/");
+		this.owner = parts[0]!;
+		this.repo = parts[1]!;
 	}
 
 	private async apiCall<T>(fn: () => Promise<T>): Promise<T> {
@@ -226,12 +226,12 @@ class GitHubService {
 
 		// Get owner (user) ID
 		const ownerQuery = `
-      query($login: String!) {
-        user(login: $login) {
-          id
-        }
-      }
-    `;
+		query($login: String!) {
+			user(login: $login) {
+				id
+			}
+		}
+	`;
 
 		const ownerData: any = await this.apiCall(() =>
 			this.octokit.graphql(ownerQuery, {
@@ -243,14 +243,14 @@ class GitHubService {
 
 		// Create project at user level
 		const createProjectMutation = `
-      mutation($ownerId: ID!, $title: String!) {
-        createProjectV2(input: {ownerId: $ownerId, title: $title}) {
-          projectV2 {
-            id
-          }
-        }
-      }
-    `;
+		mutation($ownerId: ID!, $title: String!) {
+			createProjectV2(input: {ownerId: $ownerId, title: $title}) {
+				projectV2 {
+					id
+				}
+			}
+		}
+	`;
 
 		const projectData: any = await this.apiCall(() =>
 			this.octokit.graphql(createProjectMutation, {
@@ -263,12 +263,12 @@ class GitHubService {
 
 		// Link project to repository
 		const repoQuery = `
-      query($owner: String!, $repo: String!) {
-        repository(owner: $owner, name: $repo) {
-          id
-        }
-      }
-    `;
+		query($owner: String!, $repo: String!) {
+			repository(owner: $owner, name: $repo) {
+				id
+			}
+		}
+	`;
 
 		const repoData: any = await this.apiCall(() =>
 			this.octokit.graphql(repoQuery, {
@@ -280,14 +280,14 @@ class GitHubService {
 		const repositoryId = repoData.repository.id;
 
 		const linkProjectMutation = `
-      mutation($projectId: ID!, $repositoryId: ID!) {
-        linkProjectV2ToRepository(input: {projectId: $projectId, repositoryId: $repositoryId}) {
-          repository {
-            id
-          }
-        }
-      }
-    `;
+		mutation($projectId: ID!, $repositoryId: ID!) {
+			linkProjectV2ToRepository(input: {projectId: $projectId, repositoryId: $repositoryId}) {
+				repository {
+					id
+				}
+			}
+		}
+	`;
 
 		await this.apiCall(() =>
 			this.octokit.graphql(linkProjectMutation, {
@@ -296,26 +296,27 @@ class GitHubService {
 			})
 		);
 
+		// Get the Status field
 		const getFieldsQuery = `
-      query($projectId: ID!) {
-        node(id: $projectId) {
-          ... on ProjectV2 {
-            fields(first: 20) {
-              nodes {
-                ... on ProjectV2SingleSelectField {
-                  id
-                  name
-                  options {
-                    id
-                    name
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `;
+		query($projectId: ID!) {
+			node(id: $projectId) {
+				... on ProjectV2 {
+					fields(first: 20) {
+						nodes {
+							... on ProjectV2SingleSelectField {
+								id
+								name
+								options {
+									id
+									name
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	`;
 
 		const fieldsData: any = await this.apiCall(() =>
 			this.octokit.graphql(getFieldsQuery, {
@@ -330,28 +331,29 @@ class GitHubService {
 			return;
 		}
 
+		// Update Status field with correct columns
 		const updateFieldMutation = `
-      mutation($projectId: ID!, $fieldId: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
-        updateProjectV2Field(input: {projectId: $projectId, fieldId: $fieldId, singleSelectOptions: $options}) {
-          projectV2Field {
-            ... on ProjectV2SingleSelectField {
-              id
-              options {
-                id
-                name
-              }
-            }
-          }
-        }
-      }
-    `;
+		mutation($projectId: ID!, $fieldId: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
+			updateProjectV2Field(input: {projectId: $projectId, fieldId: $fieldId, singleSelectOptions: $options}) {
+				projectV2Field {
+					... on ProjectV2SingleSelectField {
+						id
+						options {
+							id
+							name
+						}
+					}
+				}
+			}
+		}
+	`;
 
 		const updateResult: any = await this.apiCall(() =>
 			this.octokit.graphql(updateFieldMutation, {
 				projectId: projectId,
 				fieldId: statusField.id,
 				options: [
-					{ name: "Ready", color: "GRAY" },
+					{ name: "Todo", color: "GRAY" },
 					{ name: "In Progress", color: "YELLOW" },
 					{ name: "Done", color: "GREEN" },
 				],
@@ -359,32 +361,66 @@ class GitHubService {
 		);
 
 		const options = updateResult.updateProjectV2Field.projectV2Field.options;
-		const readyOptionId = options.find((opt: any) => opt.name === "Ready").id;
-		const doneOptionId = options.find((opt: any) => opt.name === "Done").id;
+		const todoOptionId = options.find((opt: any) => opt.name === "Todo")!.id;
+		const inProgressOptionId = options.find((opt: any) => opt.name === "In Progress")!.id;
+		const doneOptionId = options.find((opt: any) => opt.name === "Done")!.id;
 
+		// Create workflows
 		const createWorkflowMutation = `
-      mutation($input: CreateProjectV2WorkflowInput!) {
-        createProjectV2Workflow(input: $input) {
-          projectV2Workflow {
-            id
-          }
-        }
-      }
-    `;
+		mutation($input: CreateProjectV2WorkflowInput!) {
+			createProjectV2Workflow(input: $input) {
+				projectV2Workflow {
+					id
+				}
+			}
+		}
+	`;
 
+		// 1. Auto add sub-issues to project
 		await this.apiCall(() =>
 			this.octokit.graphql(createWorkflowMutation, {
 				input: {
 					projectId: projectId,
-					name: "Auto-add issues to project",
+					name: "Auto add sub issues to project",
 					enabled: true,
-					triggers: [{ event: "ISSUE_CREATED" }],
+					triggers: [{ subIssueAdded: {} }],
+					actions: [{ addToProject: { projectId: projectId } }],
+				},
+			})
+		);
+
+		// 2. Auto add to project (all issues from repo)
+		await this.apiCall(() =>
+			this.octokit.graphql(createWorkflowMutation, {
+				input: {
+					projectId: projectId,
+					name: "Auto add to project",
+					enabled: true,
+					triggers: [
+						{
+							issueCreated: {
+								repositoryIds: [repositoryId],
+							},
+						},
+					],
+					actions: [{ addToProject: { projectId: projectId } }],
+				},
+			})
+		);
+
+		// 3. Auto close issue → Done
+		await this.apiCall(() =>
+			this.octokit.graphql(createWorkflowMutation, {
+				input: {
+					projectId: projectId,
+					name: "Auto close issue",
+					enabled: true,
+					triggers: [{ event: "ITEM_ARCHIVED" }],
 					actions: [
-						{ addToProject: { projectId: projectId } },
 						{
 							setFieldValue: {
 								fieldId: statusField.id,
-								value: { singleSelectOptionId: readyOptionId },
+								value: { singleSelectOptionId: doneOptionId },
 							},
 						},
 					],
@@ -392,11 +428,38 @@ class GitHubService {
 			})
 		);
 
+		// 4. Item added to project → Todo (issues only)
 		await this.apiCall(() =>
 			this.octokit.graphql(createWorkflowMutation, {
 				input: {
 					projectId: projectId,
-					name: "Auto-move closed issues to Done",
+					name: "Item added to project",
+					enabled: true,
+					triggers: [
+						{
+							issueAdded: {
+								repositoryIds: [repositoryId],
+							},
+						},
+					],
+					actions: [
+						{
+							setFieldValue: {
+								fieldId: statusField.id,
+								value: { singleSelectOptionId: todoOptionId },
+							},
+						},
+					],
+				},
+			})
+		);
+
+		// 5. Item closed → Done (issues only)
+		await this.apiCall(() =>
+			this.octokit.graphql(createWorkflowMutation, {
+				input: {
+					projectId: projectId,
+					name: "Item closed",
 					enabled: true,
 					triggers: [{ event: "ISSUE_CLOSED" }],
 					actions: [
@@ -411,7 +474,27 @@ class GitHubService {
 			})
 		);
 
-		logger.info({ boardName: name }, "Kanban board created with workflows");
+		// 6. Item reopened → In Progress (issues only)
+		await this.apiCall(() =>
+			this.octokit.graphql(createWorkflowMutation, {
+				input: {
+					projectId: projectId,
+					name: "Item reopened",
+					enabled: true,
+					triggers: [{ event: "ISSUE_REOPENED" }],
+					actions: [
+						{
+							setFieldValue: {
+								fieldId: statusField.id,
+								value: { singleSelectOptionId: inProgressOptionId },
+							},
+						},
+					],
+				},
+			})
+		);
+
+		logger.info({ boardName: name }, "Kanban board created with 6 workflows");
 	}
 }
 
