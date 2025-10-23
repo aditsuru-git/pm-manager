@@ -8,6 +8,7 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - GITHUB_PAT=${GITHUB_PAT}
       - GITHUB_REPO=${GITHUB_REPO}
+      - TZ=${TZ:-UTC}
     volumes:
       - ./data:/app/data
       - ./schedule.yaml:/app/schedule.yaml:ro

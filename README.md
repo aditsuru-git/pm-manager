@@ -49,6 +49,7 @@ GITHUB_PAT=your_personal_access_token
 GITHUB_REPO=username/my-pm-manager
 LOG_LEVEL=info
 NODE_ENV=production
+TZ=Asia/Kolkata
 ```
 
 Replace `username/my-pm-manager` with your actual GitHub username and repository name.
