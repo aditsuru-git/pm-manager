@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-interface LocalIssueState {
+export interface LocalIssueState {
 	category: string;
 	deadline: string;
 	lastCreatedDate: string;
@@ -9,7 +9,7 @@ interface LocalIssueState {
 	expiredAsPerDeadline: boolean;
 }
 
-type LocalAppState = LocalIssueState[];
+export type LocalAppState = LocalIssueState[];
 
 class LocalStateService {
 	private filePath: string;

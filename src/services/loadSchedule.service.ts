@@ -8,8 +8,9 @@ const TaskSchema = z.object({
 	name: z.string(),
 	category: z.string(),
 	recurrence: z.object({
-		days: z.union([z.array(z.string()), z.literal("daily")]),
+		days: z.array(z.union([z.string(), z.literal("daily")])),
 	}),
+
 	deadline: z.string().regex(/^\d{2}:\d{2}$/, "Expected HH:MM format"),
 	description: z.string(),
 });

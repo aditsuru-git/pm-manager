@@ -308,7 +308,7 @@ class GitHubService {
 	}
 }
 
-interface IssueData {
+export interface IssueData {
 	number: number;
 	title: string;
 	body: string;
