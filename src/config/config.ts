@@ -12,8 +12,9 @@ const EnvSchema = z
 		// Pino Logger
 		LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
-		// GitHub PAT
+		// GitHub
 		GITHUB_PAT: z.string().min(1, "GITHUB_PAT is required and cannot be empty"),
+		GITHUB_REPO: z.string().min(1, "GITHUB_PAT is required and cannot be empty"),
 
 		// Runtime environment
 		NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development),

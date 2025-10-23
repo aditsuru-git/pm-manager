@@ -19,6 +19,7 @@
 	},
 	"dependencies": {
 		"js-yaml": "^4.1.0",
+		"octokit": "^5.0.4",
 		"pino": "^10.1.0",
 		"zod": "^4.1.12"
 	}

@@ -3,17 +3,13 @@ import path from "path";
 
 interface LocalIssueState {
 	category: string;
-	deadline: string; // ISO8601 with timezone
-	lastCreatedDate: string; // YYYY-MM-DD
-	recurrence: {
-		days: string[];
-	};
+	deadline: string;
+	lastCreatedDate: string;
+	days: string[];
 	expiredAsPerDeadline: boolean;
 }
 
-interface LocalAppState {
-	issues: Record<string, LocalIssueState>; // category → metadata
-}
+type LocalAppState = LocalIssueState[];
 
 class LocalStateService {
 	private filePath: string;
@@ -28,42 +24,50 @@ class LocalStateService {
 	}
 
 	save(state: LocalAppState): void {
-		const fileContent = JSON.stringify(state);
+		const fileContent = JSON.stringify(state, null, 2);
 		fs.writeFileSync(this.filePath, fileContent);
 	}
 
 	// Helper methods
 	createIssuesForToday(): string[] {
 		const localState = this.load();
-		const issues = localState.issues;
 		const issuesToCreate: string[] = [];
 		const todayDate = new Date();
 		const todayDateString = todayDate.toISOString().split("T")[0];
-		Object.keys(issues).forEach((key) => {
-			if (issues[key]?.lastCreatedDate != todayDateString) issuesToCreate.push(key);
+
+		localState.forEach((issue) => {
+			if (issue.lastCreatedDate !== todayDateString) {
+				issuesToCreate.push(issue.category);
+			}
 		});
 
 		return issuesToCreate;
 	}
 
-	markIssuesCreated(issues: string[]): void {
-		const localIssues = this.load().issues;
+	markIssuesCreated(categories: string[]): void {
+		const localState = this.load();
 		const todayDate = new Date();
-		const todayDateString = todayDate.toISOString().split("T")[0] as string;
-		issues.forEach((item) => {
-			if (localIssues[item]) {
-				localIssues[item].lastCreatedDate = todayDateString;
+		const todayDateString = todayDate.toISOString().split("T")[0];
+
+		localState.forEach((issue) => {
+			if (categories.includes(issue.category)) {
+				issue.lastCreatedDate = todayDateString as string;
 			}
 		});
+
+		this.save(localState);
 	}
 
-	toggleIssueExpired(issues: string[]): void {
-		const localIssues = this.load().issues;
-		issues.forEach((item) => {
-			if (localIssues[item]) {
-				localIssues[item].expiredAsPerDeadline = !localIssues[item].expiredAsPerDeadline;
+	toggleIssueExpired(categories: string[]): void {
+		const localState = this.load();
+
+		localState.forEach((issue) => {
+			if (categories.includes(issue.category)) {
+				issue.expiredAsPerDeadline = !issue.expiredAsPerDeadline;
 			}
 		});
+
+		this.save(localState);
 	}
 }
 
